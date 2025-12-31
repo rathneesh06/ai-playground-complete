@@ -13,7 +13,6 @@ import {
 import { AudioFile, Person, Summarize } from '@mui/icons-material';
 import { AudioUpload } from './AudioUpload';
 import { TranscriptService } from '../../services/TranscriptService';
-import { DiarizationService } from '../../services/DiarizationService';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -54,7 +53,6 @@ const ConversationAnalysis: React.FC = () => {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(0);
-  const [backendStatus, setBackendStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
 
   const handleFileSelect = (file: File) => {
     setAudioFile(file);
@@ -88,42 +86,23 @@ const ConversationAnalysis: React.FC = () => {
     setError(null);
 
     try {
-      // Check if backend is available
-      const backendAvailable = await TranscriptService.isBackendAvailable();
+      // Check if backend is available first
+      await TranscriptService.checkBackendAvailable();
       
-      if (backendAvailable) {
-        // Use real backend API
-        setProgress(10);
-        const analysisResult = await TranscriptService.analyzeConversation(audioFile);
-        
-        setProgress(100);
-        setResult({
-          transcript: analysisResult.transcript,
-          diarization: analysisResult.diarization,
-          summary: analysisResult.summary,
-        });
-      } else {
-        // Fallback to mock processing for demo
-        setProgress(30);
-        const transcript = await TranscriptService.mockTranscribeAudio();
-        
-        setProgress(70);
-        const diarization = await DiarizationService.diarizeTranscript(transcript);
-        
-        setProgress(90);
-        const summary = await TranscriptService.generateSummary(transcript);
-        
-        setProgress(100);
-        setResult({
-          transcript,
-          diarization,
-          summary,
-        });
-      }
+      // Use real backend API only
+      setProgress(10);
+      const analysisResult = await TranscriptService.analyzeConversation(audioFile);
+      
+      setProgress(100);
+      setResult({
+        transcript: analysisResult.transcript,
+        diarization: analysisResult.diarization,
+        summary: analysisResult.summary,
+      });
       
       setActiveTab(0); // Show transcript tab first
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred during processing');
+      setError(err instanceof Error ? err.message : 'Backend connection failed. Please ensure the Python backend is running.');
     } finally {
       setLoading(false);
       setProgress(0);
@@ -137,24 +116,13 @@ const ConversationAnalysis: React.FC = () => {
           Conversation Analysis
         </Typography>
         <Chip
-          label={
-            backendStatus === 'checking' ? 'Checking Backend...' :
-            backendStatus === 'available' ? 'AI Backend Active' : 'Demo Mode'
-          }
-          color={
-            backendStatus === 'checking' ? 'default' :
-            backendStatus === 'available' ? 'success' : 'warning'
-          }
+          label="AI Processing Ready"
+          color="primary"
           size="small"
         />
       </Box>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Upload an audio file to get transcript, speaker diarization, and summary
-        {backendStatus === 'unavailable' && (
-          <Typography variant="body2" color="warning.main" sx={{ mt: 1 }}>
-            ⚠️ Backend not available - using demo data. Start the Python backend for real processing.
-          </Typography>
-        )}
+        Upload an audio file to get transcript, speaker diarization, and summary using AI processing
       </Typography>
 
       {/* Audio Upload Section */}

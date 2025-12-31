@@ -239,47 +239,19 @@ export class TranscriptService {
   }
 
   /**
-   * Check if backend is available and fallback to mock if needed
+   * Check if backend is available - throws error if not
    */
-  static async isBackendAvailable(): Promise<boolean> {
+  static async checkBackendAvailable(): Promise<void> {
     try {
-      const response = await fetch(`${this.API_BASE}/`, {
+      const response = await fetch(`${this.API_BASE}/health`, {
         method: 'GET',
-        signal: AbortSignal.timeout(5000) // 5 second timeout
+        signal: AbortSignal.timeout(10000) // 10 second timeout
       });
-      return response.ok;
+      if (!response.ok) {
+        throw new Error(`Backend returned status: ${response.status}`);
+      }
     } catch (error) {
-      console.warn('Backend not available, using mock data');
-      return false;
+      throw new Error(`Backend not available: ${error instanceof Error ? error.message : 'Unknown error'}. Please ensure the Python backend is running.`);
     }
-  }
-
-  /**
-   * Fallback mock implementation for development/demo
-   */
-  static async mockTranscribeAudio(): Promise<string> {
-    await this.delay(2000);
-    
-    return `Speaker 1: Hello, thank you for calling our customer service. How can I help you today?
-
-Speaker 2: Hi, I'm having an issue with my recent order. I placed an order last week but haven't received any shipping confirmation yet.
-
-Speaker 1: I'm sorry to hear about that. Let me look into your order for you. Can you please provide me with your order number?
-
-Speaker 2: Sure, it's order number 12345. I placed it on Monday and paid extra for expedited shipping.
-
-Speaker 1: Thank you for that information. Let me check our system... I can see your order here. It looks like there was a delay in processing due to inventory issues, but I can confirm that your order shipped yesterday. You should receive a tracking email within the next hour.
-
-Speaker 2: Oh, that's a relief! Thank you for checking. Can you tell me when I should expect to receive it?
-
-Speaker 1: Based on the expedited shipping you selected, you should receive your order by tomorrow afternoon. I'll also make sure to apply a 10% discount to your next order as an apology for the confusion.
-
-Speaker 2: That's very generous, thank you so much for your help! I really appreciate the excellent customer service.
-
-Speaker 1: You're very welcome! Is there anything else I can help you with today?
-
-Speaker 2: No, that covers everything. Thank you again and have a great day!
-
-Speaker 1: Thank you, you too! Take care!`;
   }
 } 

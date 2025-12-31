@@ -116,7 +116,7 @@ const Login: React.FC = () => {
             
             <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
               <Typography variant="body2" color="text.secondary" align="center">
-                Demo Login: Use any email and password to continue
+                Enter your email and password (minimum 6 characters)
               </Typography>
             </Box>
           </Box>

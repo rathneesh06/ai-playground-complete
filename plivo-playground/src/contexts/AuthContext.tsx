@@ -26,8 +26,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<{ email: string; name: string } | null>(null);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Simple mock authentication - in real app, this would call an API
-    if (email && password) {
+    // Real authentication would validate credentials with backend
+    // For now, require valid email format and non-empty password
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (emailRegex.test(email) && password.length >= 6) {
       setIsAuthenticated(true);
       setUser({ email, name: email.split('@')[0] });
       return true;
